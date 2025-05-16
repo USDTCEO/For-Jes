@@ -4,191 +4,154 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ZODIAKINI — Твой звёздный гид</title>
-  <!-- Подключаем космический шрифт -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet"/>
   <style>
-    /* — Reset & базовые стили — */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* — сброс и базовые стили — */
+    * { margin:0; padding:0; box-sizing:border-box; }
     html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: 'Orbitron', sans-serif;
-      perspective: 1000px;
+      width:100%; height:100%; overflow:hidden;
+      background:#000; color:#fff;
+      font-family:'Orbitron',sans-serif;
+      perspective:1000px;
     }
-    a {
-      color: inherit;
-      text-decoration: none;
-      cursor: pointer;
-    }
+    a { color:inherit; text-decoration:none; cursor:pointer; }
 
-    /* — Звёздное небо — */
+    /* — Canvas-фон – всегда 100% экрана — */
     #starfield {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000;
-      z-index: 1;
-      pointer-events: none;
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      z-index:1;
+      display:block;
+      background:transparent;
+      pointer-events:none;
     }
 
-    @keyframes moveStars {
-      to { transform: translate(-50%, -50%); }
-    }
-
-    /* — Вспышка при переходе — */
+    /* — Вспышка на переход — */
     .warpFlash {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #fff;
-      display: none;
-      z-index: 5;
-      pointer-events: none;
-      animation: flashIn .6s ease-out forwards;
+      position:fixed; top:0; left:0;
+      width:100%; height:100%;
+      background:#fff;
+      display:none; z-index:5;
+      pointer-events:none;
+      animation:flashIn .6s ease-out forwards;
     }
     @keyframes flashIn {
-      0%   { opacity: 1; }
-      80%  { opacity: 0; }
-      100% { opacity: 0; display: none; }
+      0%   { opacity:1; }
+      80%  { opacity:0; }
+      100% { opacity:0; display:none; }
     }
 
     /* — Основной контейнер — */
     .container {
-      position: relative;
-      z-index: 4;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeIn 1s ease-out forwards;
+      position:relative; z-index:4;
+      width:100%; height:100%;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center;
+      opacity:0;
+      transform:translateY(20px);
+      animation:fadeIn 1s ease-out forwards;
     }
     @keyframes fadeIn {
-      to { opacity: 1; transform: translateY(0); }
+      to { opacity:1; transform:translateY(0); }
     }
     .container.tilt {
-      will-change: transform;
-      transition: transform .1s ease-out;
+      will-change:transform;
+      transition:transform .1s ease-out;
     }
 
     /* — Мерцающая луна — */
     .moon {
-      width: 140px; height: 140px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #f0f0f0, #888 70%, #333 100%);
-      box-shadow: 0 0 30px rgba(240,240,240,0.6);
-      margin-bottom: 24px;
+      width:140px; height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%,#f0f0f0,#888 70%,#333 100%);
+      box-shadow:0 0 30px rgba(240,240,240,0.6);
+      margin-bottom:24px;
       animation:
         moonPulse 3s ease-in-out infinite,
         moonTwinkle .7s ease-in-out infinite alternate;
     }
     @keyframes moonPulse {
-      0%,100% { transform: scale(1); }
-      50%     { transform: scale(1.07); box-shadow: 0 0 50px rgba(240,240,240,0.8); }
+      0%,100% { transform:scale(1); }
+      50%     { transform:scale(1.07); box-shadow:0 0 50px rgba(240,240,240,0.8); }
     }
     @keyframes moonTwinkle {
-      from { filter: brightness(1); }
-      to   { filter: brightness(1.2); }
+      from { filter:brightness(1); } to { filter:brightness(1.2); }
     }
 
-    /* — Заголовок — */
+    /* — Текстовые блоки — */
     .title {
-      font-size: 2.5rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fad0c4);
-      -webkit-background-clip: text;
-      color: transparent;
+      font-size:2.5rem; letter-spacing:3px;
+      text-transform:uppercase; margin-bottom:8px;
+      background:linear-gradient(90deg,#ff9a9e,#fad0c4,#fad0c4);
+      -webkit-background-clip:text; color:transparent;
     }
     .subtitle {
-      font-size: 1rem;
-      color: #bbb;
-      margin-bottom: 30px;
+      font-size:1rem; color:#bbb; margin-bottom:30px;
     }
 
     /* — Инструкция — */
     .instruction {
-      background: rgba(255,255,255,0.05);
-      border: 2px solid #00d1ff;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 320px;
-      margin-bottom: 24px;
-      color: #eee;
-      font-size: 16px;
-      line-height: 1.4;
-      box-shadow: 0 0 12px rgba(0,209,255,0.3);
-      animation: instrGlow 4s ease-in-out infinite alternate;
+      background:rgba(255,255,255,0.05);
+      border:2px solid #00d1ff; border-radius:12px;
+      padding:20px; max-width:320px; margin-bottom:24px;
+      color:#eee; font-size:16px; line-height:1.4;
+      box-shadow:0 0 12px rgba(0,209,255,0.3);
+      animation:instrGlow 4s ease-in-out infinite alternate;
     }
-    .instruction b { color: #00d1ff; }
+    .instruction b { color:#00d1ff; }
     @keyframes instrGlow {
-      from { box-shadow: 0 0 8px rgba(0,209,255,0.2); }
-      to   { box-shadow: 0 0 20px rgba(0,209,255,0.6); }
+      from { box-shadow:0 0 8px rgba(0,209,255,0.2); }
+      to   { box-shadow:0 0 20px rgba(0,209,255,0.6); }
     }
 
     /* — Кнопка перехода — */
     .btn {
-      position: relative;
-      padding: 14px 36px;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #fff;
-      background: rgba(255,255,255,0.1);
-      border: 2px solid #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 16px;
-      transition: transform .3s ease, background .3s ease;
+      position:relative;
+      padding:14px 36px;
+      font-size:1rem; font-weight:700;
+      background:rgba(255,255,255,0.1);
+      border:2px solid #fff; border-radius:8px;
+      margin-bottom:16px;
+      overflow:hidden;
+      transition:transform .3s,background .3s;
     }
     .btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: rgba(255,255,255,0.2);
-      transform: skewX(-20deg);
-      transition: all .5s ease;
+      content:''; position:absolute;
+      top:0; left:-100%;
+      width:100%; height:100%;
+      background:rgba(255,255,255,0.2);
+      transform:skewX(-20deg);
+      transition:all .5s;
     }
     .btn:hover {
-      transform: scale(1.05);
-      background: rgba(255,255,255,0.2);
+      transform:scale(1.05);
+      background:rgba(255,255,255,0.2);
     }
     .btn:hover::before {
-      left: 200%;
+      left:200%;
     }
 
-    /* — Warp-анимация всего контейнера — */
+    /* — Warp-анимация контейнера — */
     .warpCont {
-      animation: warpZoom 1s ease-out forwards;
+      animation:warpZoom 1s ease-out forwards;
     }
     @keyframes warpZoom {
-      0%   { transform: scale(1) translateY(0); opacity:1; }
-      60%  { transform: scale(1.3) translateY(-100px) rotateZ(5deg); opacity:0.7; }
-      100% { transform: scale(0.5) translateY(-200px); opacity:0; }
+      0%   { transform:scale(1) translateY(0); opacity:1; }
+      60%  { transform:scale(1.3) translateY(-100px) rotateZ(5deg); opacity:0.7; }
+      100% { transform:scale(0.5) translateY(-200px); opacity:0; }
     }
   </style>
 </head>
 <body>
+
   <!-- вспышка -->
   <div class="warpFlash" id="warpFlash"></div>
-  <!-- canvas для звёзд -->
+  <!-- звёздное поле -->
   <canvas id="starfield"></canvas>
 
-  <!-- главный UI -->
+  <!-- контент -->
   <div class="container tilt" id="container">
     <div class="moon"></div>
     <h1 class="title">ZODIAKINI</h1>
@@ -206,42 +169,47 @@
   </div>
 
   <script>
-    // — Starfield — 
+    // — starfield.js —
     const canvas = document.getElementById('starfield'),
           ctx    = canvas.getContext('2d');
-    let w, h, stars = [], count = 300;
-    function initStars(){
+    let w, h, stars = [], num = 300;
+    function init(){
       w = canvas.width  = window.innerWidth;
       h = canvas.height = window.innerHeight;
       stars = [];
-      for(let i=0; i<count; i++){
-        stars.push({ x:Math.random()*w, y:Math.random()*h, z:Math.random()*w, o:Math.random() });
+      for(let i = 0; i < num; i++){
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          z: Math.random() * w,
+          o: Math.random()
+        });
       }
     }
-    function renderStars(){
+    function render(){
+      ctx.clearRect(0,0,w,h);
       ctx.fillStyle = 'black';
       ctx.fillRect(0,0,w,h);
       stars.forEach(s => {
         s.z -= 4;
         if(s.z <= 0) s.z = w;
         const k = 128.0 / s.z,
-              x = s.x*k + w/2,
-              y = s.y*k + h/2;
+              x = s.x * k + w/2,
+              y = s.y * k + h/2;
         if(x >= 0 && x <= w && y >= 0 && y <= h){
           const size = (1 - s.z/w) * 3;
           ctx.beginPath();
-          ctx.arc(x, y, size, 0, 2*Math.PI);
+          ctx.arc(x,y,size,0,2*Math.PI);
           ctx.fillStyle = `rgba(255,255,255,${s.o})`;
           ctx.fill();
         }
       });
-      requestAnimationFrame(renderStars);
+      requestAnimationFrame(render);
     }
-    window.addEventListener('resize', initStars);
-    initStars();
-    renderStars();
+    window.addEventListener('resize', init);
+    init(); render();
 
-    // — 3D-tilt —
+    // — 3D tilt —
     const cont = document.getElementById('container');
     window.addEventListener('mousemove', e => {
       const rx = (e.clientX - w/2) / (w/2),
