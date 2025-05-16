@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>ZODIAKINI — Твой звёздный гид</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* сброс */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Orbitron',sans-serif;color:#fff;}
+    a{color:inherit;text-decoration:none;}
+
+    /* Canvas звёзд */
+    #starfield{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;}
+
+    /* основной контент */
+    .content{
+      position:relative; z-index:2;
+      width:100%; height:100%;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center;
+      animation:fadeIn 1.5s ease-out forwards;
+    }
+
+    /* мерцающая луна */
+    .moon{
+      width:140px; height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%,#f0f0f0,#aaa 70%,#333 100%);
+      box-shadow:0 0 30px rgba(240,240,240,0.6);
+      animation:moonPulse 3s ease-in-out infinite, moonTwinkle 0.5s alternate infinite;
+      margin-bottom:20px;
+    }
+
+    @keyframes moonPulse{
+      0%,100%{transform:scale(1);}
+      50%{transform:scale(1.08);box-shadow:0 0 50px rgba(240,240,240,0.8);}
+    }
+    @keyframes moonTwinkle{
+      0%{filter:brightness(1);}
+      100%{filter:brightness(1.2);}
+    }
+
+    /* Заголовок */
+    .title{
+      font-size:2.4rem;
+      letter-spacing:4px;
+      margin-bottom:8px;
+      text-transform:uppercase;
+      background:linear-gradient(90deg,#ff9a9e,#fad0c4,#fad0c4);
+      -webkit-background-clip:text; color:transparent;
+    }
+    .subtitle{
+      font-size:1rem;
+      margin-bottom:30px;
+      color:#aaa;
+    }
+
+    /* Кнопка */
+    .btn{
+      position:relative;
+      display:inline-block;
+      padding:14px 36px;
+      font-size:1rem; font-weight:700;
+      color:#fff;
+      background:rgba(255,255,255,0.1);
+      border:2px solid #fff;
+      border-radius:8px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:transform .3s,background .3s;
+    }
+    .btn:before{
+      content:'';
+      position:absolute;top:0;left:-100%;
+      width:100%;height:100%;
+      background:rgba(255,255,255,0.2);
+      transform:skewX(-20deg);
+      transition:all .5s;
+    }
+    .btn:hover{transform:scale(1.05);background:rgba(255,255,255,0.2);}
+    .btn:hover:before{left:200%;}
+
+    /* анимация входа */
+    @keyframes fadeIn{
+      0%{opacity:0;transform:translateY(20px);}
+      100%{opacity:1;transform:translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="content" id="container">
+    <div class="moon"></div>
+    <h1 class="title">ZODIAKINI</h1>
+    <p class="subtitle">Твой звёздный гид в Telegram</p>
+    <a href="https://t.me/zodiakini" class="btn" id="goBtn">Перейти в канал</a>
+  </div>
+  <script>
+    // простой 3D starfield
+    const canvas = document.getElementById('starfield'),
+          ctx = canvas.getContext('2d'),
+          numStars = 200;
+    let stars = [], width, height, cx, cy;
+    function init(){
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      cx = width/2; cy = height/2;
+      stars = [];
+      for(let i=0;i<numStars;i++){
+        stars.push({
+          x:(Math.random()-0.5)*width,
+          y:(Math.random()-0.5)*height,
+          z:Math.random()*width,
+          o:Math.random()
+        });
+      }
+    }
+    function render(){
+      ctx.fillStyle='black';
+      ctx.fillRect(0,0,width,height);
+      stars.forEach(s=>{
+        s.z -= 2;
+        if(s.z<=0) s.z = width;
+        const k = 128.0 / s.z;
+        const x = s.x*k + cx;
+        const y = s.y*k + cy;
+        if(x>=0 && x<=width && y>=0 && y<=height){
+          const size = (1 - s.z/width) * 3;
+          ctx.beginPath();
+          ctx.arc(x,y,size,0,2*Math.PI);
+          ctx.fillStyle = `rgba(255,255,255,${s.o})`;
+          ctx.fill();
+        }
+      });
+      requestAnimationFrame(render);
+    }
+    window.addEventListener('resize',init);
+    init(); render();
+
+    // 3D tilt для контейнера
+    const cont = document.getElementById('container');
+    window.addEventListener('mousemove',e=>{
+      const x=(e.clientX-width/2)/(width/2),
+            y=(e.clientY-height/2)/(height/2);
+      cont.style.transform=`rotateY(${x*5}deg) rotateX(${-y*5}deg)`;
+    });
+    window.addEventListener('mouseleave',()=>cont.style.transform='none');
+
+    // warp-эффект при клике
+    document.getElementById('goBtn').addEventListener('click',e=>{
+      e.preventDefault();
+      document.getElementById('container').style.transition='transform 1s ease-out,opacity 1s';
+      document.getElementById('container').style.transform='scale(0.5) translateY(-200px)';
+      document.getElementById('container').style.opacity='0';
+      setTimeout(()=> location.href=e.target.href,900);
+    });
+  </script>
+</body>
+</html>
